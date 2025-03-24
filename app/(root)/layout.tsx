@@ -3,10 +3,11 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import React, { ReactNode } from "react";
 
+import LogoutButton from "@/components/LogoutButton"; // Import the Logout Button
 import { isAuthenticated } from "@/lib/actions/auth.action";
 
 const Layout = async ({ children }: { children: ReactNode }) => {
-  const isUserAuthenticated = isAuthenticated();
+  const isUserAuthenticated = await isAuthenticated();
   if (!isUserAuthenticated) {
     redirect("/sign-in");
   }
@@ -23,9 +24,11 @@ const Layout = async ({ children }: { children: ReactNode }) => {
           />
           <h2 className={"text-primary-100"}>PrepWise</h2>
         </Link>
+        <LogoutButton />
       </nav>
       {children}
     </div>
   );
 };
+
 export default Layout;
