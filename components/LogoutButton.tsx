@@ -1,11 +1,23 @@
 "use client";
 import { useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
 
 import { Button } from "@/components/ui/button";
-import { signOut } from "@/lib/actions/auth.action";
+import { signOut, getCurrentUser } from "@/lib/actions/auth.action";
 
 export const LogoutButton = () => {
+  const [userName, setUserName] = useState<string | null>(null);
   const router = useRouter();
+
+  useEffect(() => {
+    const fetchUser = async () => {
+      const user = await getCurrentUser();
+      if (user) {
+        setUserName(user.name);
+      }
+    };
+    fetchUser();
+  }, []);
 
   const handleLogout = async () => {
     await signOut();
@@ -14,7 +26,7 @@ export const LogoutButton = () => {
 
   return (
     <Button className="btn-primary max-sm:w-full" onClick={handleLogout}>
-      Logout
+      {userName ? `Logout ${userName}` : "Logout"}
     </Button>
   );
 };

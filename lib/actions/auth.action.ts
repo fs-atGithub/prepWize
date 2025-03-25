@@ -5,45 +5,43 @@ import { db, auth } from "@/firebase/admin";
 
 const ONE_WEEK = 60 * 60 * 24 * 7 * 1000; // 1 week
 
-// sign up
-export const singUp = async (params: SignUpParams) => {
-  const { uid, name, email, password } = params;
+// Sign up
+export const signUp = async (params: SignUpParams) => {
+  const { uid, name, email } = params;
 
   try {
-    const useRecord = await db.collection("users").doc(uid).get();
-    if (useRecord.exists) {
+    const userRecord = await db.collection("users").doc(uid).get();
+    if (userRecord.exists) {
       return {
         success: false,
         message: "User already exists",
       };
     }
+
     await db.collection("users").doc(uid).set({
       name,
       email,
-      password,
-      createdAt: new Date(),
+      createdAt: new Date(), // Secure: No plain passwords stored
     });
+
     return {
       success: true,
       message: "Account created successfully",
     };
   } catch (error: any) {
-    console.error("Error creating a user:", error);
-    if (error.code === "auth/email-already-in-exists") {
-      return {
-        success: false,
-        message: "Email already exists",
-      };
-    }
+    console.error("Error creating user:", error);
     return {
       success: false,
-      message: "Error creating an account",
+      message:
+        error.code === "auth/email-already-in-use"
+          ? "Email already exists"
+          : "Error creating an account",
     };
   }
 };
 
-// sign in
-export const singIn = async (params: SignInParams) => {
+// Sign in
+export const signIn = async (params: SignInParams) => {
   const { email, idToken } = params;
 
   try {
@@ -54,6 +52,7 @@ export const singIn = async (params: SignInParams) => {
         message: "User not found",
       };
     }
+
     await setSessionCookie(idToken);
     return {
       success: true,
@@ -68,37 +67,40 @@ export const singIn = async (params: SignInParams) => {
   }
 };
 
-// sign out
+// Sign out
 export const signOut = async () => {
   const cookieStore = await cookies();
 
-  // Get the session cookie
-  const sessionCookie = cookieStore.get("session")?.value;
+  try {
+    const sessionCookie = cookieStore.get("session")?.value;
 
-  if (sessionCookie) {
-    try {
+    if (sessionCookie) {
       const decodedClaims = await auth.verifySessionCookie(sessionCookie);
-      await auth.revokeRefreshTokens(decodedClaims.uid); // Invalidate session on Firebase
-    } catch (error) {
-      console.error("Error revoking session:", error);
+      await auth.revokeRefreshTokens(decodedClaims.uid); // Invalidate Firebase session
     }
+
+    cookieStore.delete("session");
+
+    return {
+      success: true,
+      message: "Signed out successfully",
+    };
+  } catch (error) {
+    console.error("Error signing out:", error);
+    return {
+      success: false,
+      message: "Error signing out",
+    };
   }
-
-  // Remove session cookie
-  cookieStore.delete("session");
-
-  return {
-    success: true,
-    message: "Signed out successfully",
-  };
 };
 
-// set session cookie
+// Set session cookie
 export const setSessionCookie = async (idToken: string) => {
   const cookieStore = await cookies();
   const sessionCookie = await auth.createSessionCookie(idToken, {
     expiresIn: ONE_WEEK,
   });
+
   cookieStore.set("session", sessionCookie, {
     httpOnly: true,
     secure: process.env.NODE_ENV === "production",
@@ -108,15 +110,12 @@ export const setSessionCookie = async (idToken: string) => {
   });
 };
 
-// check if user is authenticated
+// Get current user
 export const getCurrentUser = async (): Promise<User | null> => {
   const cookieStore = await cookies();
   const sessionCookie = cookieStore.get("session")?.value;
 
-  if (!sessionCookie) {
-    return null;
-  }
-  console.log("sessionCookie", sessionCookie);
+  if (!sessionCookie) return null;
 
   try {
     const decodedClaims = await auth.verifySessionCookie(sessionCookie, true);
@@ -124,20 +123,23 @@ export const getCurrentUser = async (): Promise<User | null> => {
       .collection("users")
       .doc(decodedClaims.uid)
       .get();
-    if (!userRecord.exists) {
-      return null;
-    }
+
+    if (!userRecord.exists) return null;
+
+    const userData = userRecord.data();
+
     return {
-      ...userRecord.data(),
+      ...userData,
       id: userRecord.id,
-    } as User;
+      createdAt: userData?.createdAt?.toDate().toISOString() || null, // Ensure serializable format
+    } as unknown as User;
   } catch (error) {
-    console.error("Error verifying session cookie:", error);
+    console.error("Error verifying session:", error);
     return null;
   }
 };
 
+// Check authentication status
 export const isAuthenticated = async (): Promise<boolean> => {
-  const user = await getCurrentUser();
-  return !!user;
+  return !!(await getCurrentUser());
 };
