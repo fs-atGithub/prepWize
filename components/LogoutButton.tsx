@@ -1,28 +1,13 @@
-"use client";
-import { useRouter } from "next/navigation";
-import { useState, useEffect } from "react";
-
 import { Button } from "@/components/ui/button";
 import { signOut, getCurrentUser } from "@/lib/actions/auth.action";
 
-export const LogoutButton = () => {
-  const [userName, setUserName] = useState<string | null>(null);
-  const router = useRouter();
-
-  useEffect(() => {
-    const fetchUser = async () => {
-      const user = await getCurrentUser();
-      if (user) {
-        setUserName(user.name); // Extract the name directly from user data
-      }
-    };
-
-    fetchUser();
-  }, []);
+export const LogoutButton = async () => {
+  const user = await getCurrentUser();
+  const userName = user?.name || null; // Extract name directly during component render
 
   const handleLogout = async () => {
+    "use server"; // Mark this function to run on the server
     await signOut();
-    router.push("/sign-in"); // Redirect after logout
   };
 
   return (
