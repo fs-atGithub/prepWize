@@ -1,7 +1,6 @@
 import { redirect } from "next/navigation";
 import React, { ReactNode } from "react";
 
-import Header from "@/components/header";
 import { isAuthenticated } from "@/lib/actions/auth.action";
 
 const AuthLayout = async ({ children }: { children: ReactNode }) => {

@@ -1,6 +1,6 @@
 "use client";
 import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useState, useEffect } from "react";
 
 import { Button } from "@/components/ui/button";
 import { signOut, getCurrentUser } from "@/lib/actions/auth.action";
@@ -13,11 +13,12 @@ export const LogoutButton = () => {
     const fetchUser = async () => {
       const user = await getCurrentUser();
       if (user) {
-        setUserName(user.name);
+        setUserName(user.name); // Extract the name directly from user data
       }
     };
-    fetchUser().then((r) => userName);
-  }, [userName]);
+
+    fetchUser();
+  }, []);
 
   const handleLogout = async () => {
     await signOut();
