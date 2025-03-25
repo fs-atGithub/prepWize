@@ -16,8 +16,8 @@ export const LogoutButton = () => {
         setUserName(user.name);
       }
     };
-    fetchUser();
-  }, []);
+    fetchUser().then((r) => userName);
+  }, [userName]);
 
   const handleLogout = async () => {
     await signOut();
