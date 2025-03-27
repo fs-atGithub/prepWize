@@ -56,6 +56,11 @@ interface AgentProps {
   questions?: string[];
 }
 
+interface SavedMessage {
+  role: "user" | "assistant" | "system";
+  content: string;
+}
+
 interface RouteParams {
   params: Promise<Record<string, string>>;
   searchParams: Promise<Record<string, string>>;
