@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 import { cn, getRandomInterviewCover, getTechLogos } from "@/lib/utils";
 
 const InterviewCard = ({
-  interviewId,
+  id,
   userId,
   role,
   type,
@@ -65,11 +65,7 @@ const InterviewCard = ({
 
         <Button asChild className={"btn-primary"}>
           <Link
-            href={
-              feedback
-                ? `/interview/${interviewId}/feedback/`
-                : `/interview/${interviewId}`
-            }
+            href={feedback ? `/interview/${id}/feedback/` : `/interview/${id}`}
           >
             {feedback ? "Check feedback" : "View interview"}
           </Link>

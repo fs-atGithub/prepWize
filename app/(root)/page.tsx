@@ -4,11 +4,11 @@ import React from "react";
 
 import InterviewCard from "@/components/InterviewCard";
 import { Button } from "@/components/ui/button";
+import { getCurrentUser } from "@/lib/actions/auth.action";
 import {
-  getCurrentUser,
   getInterviewByUserId,
   getLatestInterviews,
-} from "@/lib/actions/auth.action";
+} from "@/lib/actions/general.action";
 
 const Home = async () => {
   const user = await getCurrentUser();
@@ -44,7 +44,7 @@ const Home = async () => {
         <h2>Your interviews</h2>
         <div className={"interviews-section"}>
           {hasPastInterviews ? (
-            userInterviews.map((interview) => (
+            userInterviews?.map((interview) => (
               <InterviewCard key={interview.id} {...interview} />
             ))
           ) : (
